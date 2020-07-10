@@ -1,10 +1,12 @@
 import React from 'react';
 import { ReactApplication, useContextState, Template } from '../src';
-import { bootstrp, Controller, Route, State, Context, useMiddleware, useException } from '@typeclient/core';
+import { bootstrp, Controller, Route, State, Context, useMiddleware, useException, usePopStateHistoryMode } from '@typeclient/core';
 import { injectable, inject } from 'inversify';
 import { MiddlewareTransform } from '@typeclient/core/dist/application/transforms/middleware';
 import { ComposeNextCallback } from '@typeclient/core/dist/application/compose';
 import { ExceptionTransfrom } from '@typeclient/core/dist/application/transforms/expception';
+
+usePopStateHistoryMode()
 
 interface TCustomRouteData {
   count: number

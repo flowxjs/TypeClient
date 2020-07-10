@@ -49,7 +49,8 @@ function getUrlByLocation() {
   if (History.mode === 'hashchange') {
     return window.location.hash.replace(/^\#/, '') || '/';
   }
-  return window.location.href || '/';
+  const location = window.location;
+  return location.pathname + location.search + location.hash;
 }
 
 export const bootstrp = invoke;
