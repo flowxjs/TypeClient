@@ -33,3 +33,4 @@ export const useContextState = <T, S>(selector: Selector<T, S>): S => {
 };
 
 export const ContextProvider = StoreContext.Provider;
+export * from './component';

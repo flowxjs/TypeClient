@@ -9,7 +9,7 @@ import { ContextProvider } from './reactive';
 export type TReactApplicationOptions = TApplicationOptions & { el: HTMLElement };
 
 export class ReactApplication extends Application<TReactApplicationLifecycles> {
-  private readonly FCS: WeakMap<any, Map<string, React.FunctionComponent<any>>> = new WeakMap();
+  public readonly FCS: WeakMap<any, Map<string, React.FunctionComponent<any>>> = new WeakMap();
   constructor(options: TReactApplicationOptions) {
     super(options);
     this.on('Application.onInit', next => this.applicationWillSetup(options.el, next));
@@ -30,13 +30,13 @@ export class ReactApplication extends Application<TReactApplicationLifecycles> {
     const classModuleMetaData = metadata.meta.parent;
     const TemplateComponent = classModuleMetaData.got<React.FunctionComponent>(NAMESPACE.TEMPLATE, null);
     const LazyComponent = this.getLazyServerKeyCallback(server, key);
-    // console.log('set ctx key', ctx, ctx.key)
     this.trigger('React.props', ctx);
     if (TemplateComponent) {
       this.trigger('React.component', () => TemplateComponent);
       this.trigger('React.slot', () => LazyComponent);
     } else {
       this.trigger('React.component', () => LazyComponent);
+      // this.trigger('React.slot', () => null);
     }
   }
 

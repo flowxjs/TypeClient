@@ -48,7 +48,7 @@ export class Application<S extends { [key: string]: { arguments: any[], return: 
         }
       }
       req.params = handler.params || {};
-      handler.handler(req);
+      this.nextTick(req, handler.handler);
     }
   }
 

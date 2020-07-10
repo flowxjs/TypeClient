@@ -1,12 +1,12 @@
 import React from 'react';
-import { ReactApplication, useContextState, Template } from '../src';
+import { ReactApplication, useContextState, Template, Component, useContextComponent } from '../src';
 import { bootstrp, Controller, Route, State, Context, useMiddleware, useException, usePopStateHistoryMode } from '@typeclient/core';
 import { injectable, inject } from 'inversify';
 import { MiddlewareTransform } from '@typeclient/core/dist/application/transforms/middleware';
 import { ComposeNextCallback } from '@typeclient/core/dist/application/compose';
 import { ExceptionTransfrom } from '@typeclient/core/dist/application/transforms/expception';
 
-usePopStateHistoryMode()
+// usePopStateHistoryMode()
 
 interface TCustomRouteData {
   count: number
@@ -45,6 +45,11 @@ class Abc {
   abc() {
     return 123;
   }
+
+  @Component()
+  test(props: React.PropsWithoutRef<any>) {
+    return React.createElement('p', null, 'hello world');
+  }
 }
 
 @Controller()
@@ -61,7 +66,10 @@ class CustomController {
       return {
         count: ctx.state.count
       }
-    })
+    });
+
+    const Cmp = useContextComponent(ctx.app as ReactApplication, this.Abc, 'test');
+
     return React.createElement(React.Fragment, null, 
       React.createElement('h3', null, ctx.query.a + 'test title' + count),
       React.createElement('button', {
@@ -71,13 +79,13 @@ class CustomController {
       }, 'add +'),
       React.createElement('button', {
         onClick: () => ctx.redirect('/ooo'),
-      }, 'go')
+      }, 'go'),
+      Cmp ? React.createElement(Cmp) : null
     )
   }
 
   @Route('/ooo')
   sss(ctx: Context) {
-    console.log(ctx)
     return React.createElement('p', null, '123 - ')
   }
 }

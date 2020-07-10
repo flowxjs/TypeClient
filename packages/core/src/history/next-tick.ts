@@ -42,7 +42,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 }
 
 export function createNextTick<T = any>(handleError: (e: Error, ctx: T) => void) { 
-  return (ctx: T, cb: Function) => {
+  return (ctx: any, cb: Function) => {
     callbacks.push(() => {
       try {
         cb(ctx);
