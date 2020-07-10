@@ -20,6 +20,10 @@ export class MiddlewareTransforms<C extends Context> {
       }
       return classModule;
     });
+    middlewares.push(async (ctx, next) => {
+      ctx.status = 200;
+      await next();
+    });
     return Compose(middlewares as ComposeMiddleware<C>[])(ctx);
   }
 

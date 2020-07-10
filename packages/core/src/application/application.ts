@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { useHistoryFeedback } from '../history';
+import { useHistoryFeedback, redirect, replace, reload } from '../history';
 import { TClassIndefiner, AnnotationMetaDataScan, NAMESPACE, AnnotationDependenciesAutoRegister } from '../annotation';
 import { TypeClientContainer } from '../ioc';
 import { Router, RouterArguments } from '../router';
@@ -18,6 +18,7 @@ export class Application<S extends { [key: string]: { arguments: any[], return: 
   private readonly router: Router;
   
   public context: Context;
+  public readonly reload = reload;
   public readonly unSubscribe: ReturnType<typeof useHistoryFeedback>;
   public readonly nextTick = createNextTick((e: Error, ctx: Context) => this.trigger('Application.onError', e, ctx));
 
@@ -39,7 +40,13 @@ export class Application<S extends { [key: string]: { arguments: any[], return: 
     if (uri) {
       const req = new Request(uri);
       const handler = this.router.lookup(req.pathname);
-      if (!handler) return this.trigger('Application.onNotFound', req);
+      if (!handler) return this.trigger('Application.onErrorRender', this.trigger('Application.onNotFound', req));
+      if (this.context) {
+        switch (this.context.status) {
+          case 100: this.context.destroy(); break;
+          case 200: this.context.trigger('context.destroy'); break;
+        }
+      }
       req.params = handler.params || {};
       handler.handler(req);
     }
@@ -73,14 +80,27 @@ export class Application<S extends { [key: string]: { arguments: any[], return: 
       if (!propertyPath) continue;
       const propertyEntryPath = join(classPrefix, '.', propertyPath);
       const propertyInjectors = method.meta.got<TClassIndefiner<any>[]>(NAMESPACE.INJECTABLE, []);
-      const propertyStates = method.meta.got(NAMESPACE.STATE, () => ({}));
+      const propertyStates = method.meta.got<object | (() => object)>(NAMESPACE.STATE, {});
       this.injectClassModules(...propertyInjectors);
       this.router.on(propertyEntryPath, (req: Request) => {
-        const context = this.context = new Context(this, req, propertyStates());
+        const context = this.context = new Context(this, req, typeof propertyStates === 'function' ? propertyStates() : propertyStates);
         const server = TypeClientContainer.get<T>(classModule);
         this.trigger('Application.onRender', context, server, key, method);
         ContextTransforming(context, method);
       })
     }
+  }
+
+  private urlencode(url: string) {
+    if (url.startsWith(this.prefix)) return url;
+    return join(this.prefix, '.', url);
+  }
+
+  public redirect(url: string, title?: string) {
+    return redirect(this.urlencode(url), title);
+  }
+
+  public replace(url: string, title?: string) {
+    return replace(this.urlencode(url), title);
   }
 }

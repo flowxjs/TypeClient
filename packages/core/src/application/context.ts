@@ -1,10 +1,8 @@
-import { join } from 'path';
 import { Request } from './request';
 import { Application } from './application';
 import { ContextEventEmitter } from './events';
 import { TApplicationContextLifeCycle } from './lifecycle';
 import { reactive, Ref, UnwrapRef } from '@vue/reactivity';
-import { redirect, replace, reload } from '../history';
 
 type UnwrapNestedRefs<T> = T extends Ref ? T : UnwrapRef<T>;
 let index = 0;
@@ -15,8 +13,11 @@ export class Context<T extends object = {}> extends ContextEventEmitter<TApplica
   public readonly state: UnwrapNestedRefs<T>;
   public readonly query: { [key: string]: string };
   public readonly params: { [key: string]: string };
-  public readonly reload = reload;
   public readonly key: number;
+  
+  public status: 100 | 200 | 500 | 900 = 100;
+
+  private readonly rejections: ((e?: any) => void)[] = [];
 
   constructor(app: Application<any>, req: Request, data: T) {
     super();
@@ -28,53 +29,29 @@ export class Context<T extends object = {}> extends ContextEventEmitter<TApplica
     this.key = index++;
   }
 
-  destroy() {
-
+  public useReject(reject: (e?: any) => void) {
+    this.rejections.push(reject);
+    return () => {
+      const index = this.rejections.indexOf(reject);
+      if (index > -1) this.rejections.splice(index, 1);
+    }
   }
 
-  private readonly urlencode = (url: string) => {
-    if (url.startsWith(this.app.prefix)) return url;
-    return join(this.app.prefix, '.', url);
+  public destroy() {
+    const rejections = this.rejections.slice(0);
+    this.status = 900;
+    this.rejections.length = 0;
+    let i = rejections.length;
+    while (i--) rejections[i]();
   }
 
   public readonly redirect = (url: string, title?: string) => {
-    return redirect(this.urlencode(url), title);
+    return this.app.redirect(url, title);
   }
 
   public readonly replace = (url: string, title?: string) => {
-    return replace(this.urlencode(url), title);
+    return this.app.replace(url, title);
   }
+
+  public readonly reload = () => this.app.reload();
 }
-
-// export interface TContext<T extends object = {}> {
-//   app: Application<any>,
-//   state: UnwrapNestedRefs<T>,
-//   query: Readonly<Request['query']>,
-//   params: Readonly<Request['params']>,
-//   key: number,
-//   reload: () => void,
-//   redirect: (url: string, title?: string) => void,
-//   replace: (url: string, title?: string) => void,
-// };
-
-// export function createNewContextObject<T extends object = {}>(app: Application<any>, req: Request, data: T): TContext<T> {
-//   return {
-//     app,
-//     state: reactive(data),
-//     query: readonly(req.query),
-//     params: readonly(req.params),
-//     key: index++,
-//     reload,
-//     redirect(url: string, title?: string) {
-//       return redirect(urlencode(app.prefix, url), title);
-//     },
-//     replace(url: string, title?: string) {
-//       return replace(urlencode(app.prefix, url), title);
-//     }
-//   }
-// }
-
-// function urlencode(prefix: Application<any>['prefix'], url: string) {
-//   if (url.startsWith(prefix)) return url;
-//   return join(prefix, '.', url);
-// }

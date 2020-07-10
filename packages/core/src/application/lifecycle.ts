@@ -18,6 +18,10 @@ export type TApplicationLifeCycle = {
   'Application.onRender': {
     arguments: [Context, any, string, TAnnotationScanerMethod],
     return: any,
+  },
+  'Application.onErrorRender': {
+    arguments: [any],
+    return: void
   }
 }
 
