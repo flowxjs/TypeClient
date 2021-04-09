@@ -29,7 +29,7 @@
     "inversify": "^5.0.1",
     "mitt": "^2.1.0",
     "next-tick": "^1.1.0",
-    "p-reduce": "^2.1.0",
+    "p-reduce": "^3.0.0",
     "reflect-metadata": "^0.1.13",
     "url-parse": "^1.4.7"
   },
